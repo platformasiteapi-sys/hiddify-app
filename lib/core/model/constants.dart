@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hiddify/branding/branding.dart';
 
 abstract class Constants {
-  static const appName = "Hiddify";
-  static const githubUrl = "https://github.com/hiddify/hiddify-next";
-  static const licenseUrl = "https://github.com/hiddify/hiddify-next?tab=License-1-ov-file#readme";
-  static const githubReleasesApiUrl = "https://api.github.com/repos/hiddify/hiddify-next/releases";
-  static const githubLatestReleaseUrl = "https://github.com/hiddify/hiddify-app/releases/latest";
-  static const appCastUrl = "https://raw.githubusercontent.com/hiddify/hiddify-next/main/appcast.xml";
-  static const telegramChannelUrl = "https://t.me/hiddify";
-  static const privacyPolicyUrl = "https://hiddify.com/privacy-policy/";
-  static const termsAndConditionsUrl = "https://hiddify.com/terms/";
+  // All brand-specific values are sourced from [Branding] (lib/branding/branding.dart).
+  // This keeps upstream-merge conflicts isolated to this single file.
+  static const appName = Branding.appName;
+  static const githubUrl = Branding.githubUrl;
+  static const licenseUrl = Branding.licenseUrl;
+  static const githubReleasesApiUrl = Branding.githubReleasesApiUrl;
+  static const githubLatestReleaseUrl = Branding.githubLatestReleaseUrl;
+  static const appCastUrl = Branding.appCastUrl;
+  static const telegramChannelUrl = Branding.telegramChannelUrl;
+  static const privacyPolicyUrl = Branding.privacyPolicyUrl;
+  static const termsAndConditionsUrl = Branding.termsAndConditionsUrl;
   static const cfWarpPrivacyPolicy = "https://www.cloudflare.com/application/privacypolicy/";
   static const cfWarpTermsOfService = "https://www.cloudflare.com/application/terms/";
 }
