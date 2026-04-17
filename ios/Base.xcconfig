@@ -5,6 +5,9 @@
 //  Created by GFWFighter on 7/24/1402 AP.
 //
 
-BASE_BUNDLE_IDENTIFIER=apple.hiddify.com
-SERVICE_IDENTIFIER=com.hiddify.app
+BASE_BUNDLE_IDENTIFIER=com.vpnpro.app
+SERVICE_IDENTIFIER=com.vpnpro.service
+// DEVELOPMENT_TEAM is intentionally left as Hiddify's team id for now.
+// Replace with your own Apple Developer team id before building for a real iOS device.
+// For simulator builds this value is ignored.
 DEVELOPMENT_TEAM=3JFTY5BP58

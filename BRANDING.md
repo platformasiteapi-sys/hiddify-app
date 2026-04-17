@@ -111,13 +111,54 @@ it usually means a new brand touchpoint should be factored out into
 
 ---
 
+## Bundle / Application IDs
+
+**Current ID: `com.vpnpro.app`** (changed from `app.hiddify.com`).
+
+| Platform | File | Value |
+|---|---|---|
+| Android | `android/app/build.gradle` | `applicationId "com.vpnpro.app"` |
+| Android | `android/app/src/main/res/xml/shortcuts.xml` | `targetPackage` |
+| iOS | `ios/Base.xcconfig` | `BASE_BUNDLE_IDENTIFIER` + `SERVICE_IDENTIFIER` |
+| iOS | `ios/Runner.xcodeproj/project.pbxproj` | RunnerTests bundle id |
+| iOS | `ios/Runner/Info.plist` | `CFBundleURLName` |
+| iOS | `ios/Runner.xcodeproj/.../HiddifyPacketTunnel.xcscheme` | scheme `BundleIdentifier` |
+| iOS | `ios/HiddifyPacketTunnel/SingBox/ExtensionProvider.swift` | `os.Logger` subsystem |
+| macOS | `macos/Runner/Configs/AppInfo.xcconfig` | `PRODUCT_BUNDLE_IDENTIFIER` |
+| Linux | `linux/CMakeLists.txt` | `APPLICATION_ID` |
+
+**Android `namespace` is intentionally left as `com.hiddify.hiddify`** —
+see rule #4 in "Rules to minimize future conflicts" above. `namespace` is
+internal (Java/Kotlin package), not visible to users, and changing it
+would require moving all Kotlin files — creating permanent conflict risk
+with every upstream edit to those files.
+
+### Bundle-ID touchpoints still on old value (deferred — not needed for local test build)
+
+- `ios/exportOptions.plist` — used by `xcodebuild -exportArchive` for
+  App Store upload. Update when setting up release pipeline.
+- `ios/Runner/Runner.entitlements` / `HiddifyPacketTunnel.entitlements`
+  reference `group.$(BASE_BUNDLE_IDENTIFIER)` — resolves to
+  `group.com.vpnpro.app` automatically, but the App Group must be
+  **registered in Apple Developer portal** before a device build.
+- `ios/Base.xcconfig` `DEVELOPMENT_TEAM=3JFTY5BP58` is still Hiddify's
+  team id. Replace with your own before device builds. Ignored for
+  simulator builds.
+- `linux/packaging/deb/make_config.yaml`, `appimage/make_config.yaml`,
+  `linux/packaging/app.hiddify.com.appdata.xml`, `linux/packaging/appimage/AppRun`,
+  `Makefile` — all hard-code `app.hiddify.com`. Used only when building
+  `.deb` / AppImage / snap. `flutter build linux` does NOT touch them.
+- `.github/workflows/build.yml` — Play Store / App Store upload steps.
+  Update before running CI-driven releases.
+- `appcast.xml` — Sparkle auto-update feed, points to Hiddify releases.
+  See `Branding.appCastUrl` — must point to your own feed before
+  shipping desktop builds.
+
+---
+
 ## What still needs to be done before public release
 
 ### Must-do (blocks release)
-- [ ] **Change `applicationId` / `bundle id`** on all platforms so the
-      branded app installs alongside (not over) Hiddify. See
-      `android/app/build.gradle`, `ios/Runner.xcodeproj`, `macos/Runner`,
-      `windows/runner`, `linux/CMakeLists.txt`.
 - [ ] **Replace `appCastUrl` and GitHub URLs** in
       `lib/branding/branding.dart` with our own update channel.
       Otherwise users will auto-update to upstream Hiddify.
