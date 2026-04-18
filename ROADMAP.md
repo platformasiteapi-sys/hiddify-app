@@ -10,8 +10,9 @@ This file is the product/feature roadmap.
 
 ## Current state (as of 2026-04-18)
 
-Branch: `brand/vpnpro`. 7 commits on top of upstream `main`.
+Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 
+**Phase 1 — Foundation** ✅
 - ✅ Git hygiene: `.gitattributes`, `.gitignore` for `.claude/`
 - ✅ `lib/branding/branding.dart` — single source of truth for brand values
 - ✅ Display name "VPN Pro" on all 5 platforms (Android, iOS, macOS, Windows, Linux)
@@ -20,6 +21,13 @@ Branch: `brand/vpnpro`. 7 commits on top of upstream `main`.
 - ✅ Adaptive-icon XML fixed to reference mipmap PNGs (Android 8+)
 - ✅ `common.appTitle` → "VPN Pro" in all 11 locales
 - ✅ [BRANDING.md](BRANDING.md) with upstream-sync procedure
+
+**Phase 3 — Info blocks** ✅ (Phase 2 and Phases 4+ still ahead)
+- ✅ `lib/branding/info_block.dart` — model
+- ✅ `lib/features/vpnpro_info_blocks/` — feature module (data, providers, widgets)
+- ✅ One-line hook on home screen (above active-proxy footer)
+- ✅ Hardcoded list in `Branding.infoBlocksHardcoded` with expiry / priority / dismiss
+- ⏳ Server-driven source (Phase 3.1) — deferred until backend endpoint exists
 
 **Still Hiddify-themed** (intentionally, pending final art and decisions):
 - `assets/images/logo.svg` — used in header, About screen, intro, connection button
