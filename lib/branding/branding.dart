@@ -1,3 +1,5 @@
+import 'package:hiddify/branding/info_block.dart';
+
 /// Central place for all brand-specific values.
 ///
 /// IMPORTANT: Keep **all** customization here. Never inline brand strings
@@ -35,4 +37,40 @@ abstract class Branding {
   // ---- License (for About screen) ----
   static const licenseUrl =
       "https://github.com/hiddify/hiddify-next?tab=License-1-ov-file#readme";
+
+  // ---- Info blocks (home screen) ----
+  // Feature module: lib/features/vpnpro_info_blocks/ (Phase 3 of ROADMAP).
+  //
+  // Edit [infoBlocksHardcoded] to push announcements — rebuild + redistribute
+  // the app. A future phase will fetch this list from a server endpoint;
+  // consumers won't need to change.
+
+  /// Master switch. When `false`, the info-blocks section never renders.
+  static const bool enableInfoBlocks = true;
+
+  /// How many blocks to show simultaneously (highest priority first).
+  /// `1` = single banner. Increase for stacked cards.
+  static const int maxInfoBlocksShown = 1;
+
+  /// Active info blocks. Add/remove entries here to change what users see.
+  ///
+  /// Tips:
+  ///   • Use unique `id`s. Changing an id re-shows a previously-dismissed
+  ///     block — handy when wording changes and you want users to see it.
+  ///   • Set `expiresAt` on promos so they vanish automatically.
+  ///   • Set `critical: true` for outages / maintenance (renders in
+  ///     error-container color, drawing attention).
+  ///   • `dismissible: false` for anything users must acknowledge.
+  static final List<InfoBlock> infoBlocksHardcoded = [
+    InfoBlock(
+      id: "welcome-2026-04",
+      priority: 100,
+      title: "Добро пожаловать в VPN Pro",
+      text:
+          "Быстрый и приватный VPN. Если возникнут вопросы — напишите нам в поддержку.",
+      ctaLabel: "Поддержка",
+      ctaUrl: telegramChannelUrl,
+      expiresAt: DateTime.utc(2026, 12, 31),
+    ),
+  ];
 }
