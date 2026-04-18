@@ -104,4 +104,46 @@ abstract class Branding {
   /// Client already stores the latest token in SharedPreferences, so flipping
   /// this flag is enough — no client rework needed.
   static const String? deviceTokenEndpoint = null;
+
+  // ---- Email activation (Phase 8) ----
+  // Feature module: lib/features/vpnpro_activation/ (Phase 8 of ROADMAP —
+  // shipped as email-lookup variant; original key-based design deferred).
+  //
+  // Flow on first launch:
+  //   1. User enters email on EmailActivationPage.
+  //   2. App POSTs {email} to [activationEndpoint] (Supabase Edge Function
+  //      `lookup-subscription` in the APPHub project).
+  //   3. Edge Function fans out to configured brand Supabase projects and
+  //      returns `{subscription_url, brand}` for the first match.
+  //   4. App imports the subscription URL via ProfileRepository.upsertRemote,
+  //      marks the new profile active, sets locale/region = ru, flips
+  //      introCompleted and lands on /home.
+  //
+  // Escape hatch (always visible on the activation screen):
+  //   - "Пропустить" → redirects to the stock Hiddify /intro flow where the
+  //     user can complete onboarding and paste a subscription URL manually.
+  //
+  // Flipping [enableEmailActivation] back to `false` restores pristine
+  // Hiddify onboarding with zero other code changes.
+
+  /// Master switch for the email-activation first-launch screen.
+  static const bool enableEmailActivation = true;
+
+  /// Supabase Edge Function endpoint for email → subscription URL lookup.
+  /// Accepts POST `{email: string, brand?: string}`; returns
+  /// `{subscription_url: string, brand: string}` on 200, or 404 if the email
+  /// isn't found in any configured brand DB.
+  static const String activationEndpoint =
+      "https://mtiagdyyujgydifquafg.supabase.co/functions/v1/lookup-subscription";
+
+  /// Public anon JWT for the APPHub project — required by the function's
+  /// JWT verification. Safe to embed in the client: the function only reads
+  /// via the hub's RLS-protected `brands` table and never accepts
+  /// client-driven SQL. Rotatable independently from brand service keys.
+  static const String activationApiKey =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10aWFnZHl5dWpneWRpZnF1YWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjM5MjYsImV4cCI6MjA5MjA5OTkyNn0.3rr-xwFwgGAf1avGj0tvWlAwVPGnX6UBa5huLtulsyI";
+
+  /// Where to send users who don't have a subscription yet. Shown as a
+  /// "Нет подписки?" link on the activation screen when non-null.
+  static const String? purchaseUrl = "https://vpsservice.tech/";
 }

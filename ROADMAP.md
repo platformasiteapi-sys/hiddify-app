@@ -40,6 +40,17 @@ Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 - ⏳ iOS push — deferred (requires Apple Developer Program $99/yr). Code already handles iOS; just needs `GoogleService-Info.plist` + entitlements
 - ⏳ Per-user targeted pushes (Phase 4.1) — deferred until backend endpoint exists (`Branding.deviceTokenEndpoint` null-switch ready)
 
+**Phase 8 — Activation flow (email variant)** ✅
+- ✅ APPHub Supabase project (`mtiagdyyujgydifquafg`) with `brands` table (slug, display_name, url_secret, key_secret, subscription_table, email_column, url_column, active). Seeded for `aura` and `brand_1`; brand secrets set in dashboard.
+- ✅ `lookup-subscription` Edge Function fans out across enabled brands, returns `{subscription_url, brand}` on match or 404 `not_found`. `verify_jwt=true` with legacy anon JWT from client.
+- ✅ `lib/features/vpnpro_activation/` — `ActivationFailure` (freezed), `ActivationRepository` (Dio POST), `ActivationNotifier` (full chain: lookup → `upsertRemote` → `setAsActive` → pin `ru` locale/region → `introCompleted=true`), `EmailActivationPage` (hooks UI with inline errors, "Пропустить" escape hatch).
+- ✅ `Branding.enableEmailActivation` / `activationEndpoint` / `activationApiKey` / `purchaseUrl` flags.
+- ✅ Router redirects `!introCompleted && enableEmailActivation && url == null` → `/email-activate`. Deep-link subscription URLs still go to stock `/intro`. "Пропустить" → stock onboarding (kill switch works).
+- ✅ End-to-end tested on Android debug APK: real email → subscription auto-imported → VPN connects.
+- 🟡 Key-based activation (original Phase 8 design with `VPN-XXXX-XXXX` codes) — superseded by email lookup. Keep in mind if we later need per-user tokens (SSO, account API).
+- ⏳ Deep-link scheme `vpnpro://activate?email=...` — not wired yet (low priority; email paste works fine).
+- ⏳ Phase 9 custom onboarding — deferred; for now email activation screen *is* the first-launch UI.
+
 **Still Hiddify-themed** (intentionally, pending final art and decisions):
 - `assets/images/logo.svg` — used in header, About screen, intro, connection button
 - `assets/images/world_map.png` — background on home screen
@@ -427,46 +438,70 @@ reused via existing Riverpod providers.
 
 ---
 
-## Phase 8 — Activation flow
+## Phase 8 — Activation flow ✅ (shipped as email-lookup variant)
 
-**Why:** Users buy a key on our site → need to activate in app → app
-should pull subscription. Current Hiddify flow ("paste subscription URL")
-is geek-level.
+**Why:** Users buy a subscription on one of our brand sites → need to
+activate in app → app should pull subscription. Current Hiddify flow
+("paste subscription URL") is geek-level.
 
-### Flow design
+### Shipped design (email lookup)
 
-1. First launch → onboarding (3 screens, Phase 9)
-2. Final onboarding screen: "Enter activation key" input
-3. User types key (short code, e.g. `VPN-XXXX-XXXX`)
-4. App → `POST api.vpnpro.app/v1/activate {key}` → returns `{subscription_url, user_token}`
-5. App imports `subscription_url` via existing `ProfileRepository.add(...)`
-6. Stores `user_token` securely (for WebView SSO, push token registration, account API)
-7. User lands on home screen, already configured
+1. First launch → `/email-activate` (replaces stock Hiddify `/intro` when
+   `Branding.enableEmailActivation` is `true`).
+2. User enters the email they bought the subscription with.
+3. App → `POST <APPHub>/functions/v1/lookup-subscription {email}` — see
+   [Supabase APPHub](https://supabase.com/dashboard/project/mtiagdyyujgydifquafg)
+   / `lookup-subscription` Edge Function.
+4. Edge Function reads enabled brands from the hub's `brands` table,
+   queries each brand's subscriptions table in parallel, returns the
+   first match as `{subscription_url, brand}` or 404 `not_found`.
+5. App imports via `ProfileRepository.upsertRemote(url)` → looks up the
+   fresh profile by URL → `setAsActive(id)`.
+6. Locale/region pinned to `ru` (product decision — RU-only audience).
+7. `Preferences.introCompleted = true` → router redirects to `/home`.
 
-### Alternative entry: deep link
+### Escape hatch
 
-Email after purchase contains `vpnpro://activate?key=VPN-XXXX-XXXX`.
-Tapping on phone → opens app → auto-activates.
+"Пропустить" button → `/intro` (stock Hiddify onboarding). Users without
+a subscription, or users who want to paste a custom URL, bounce here.
+Flipping `Branding.enableEmailActivation` to `false` restores pristine
+Hiddify behaviour with zero other code changes.
 
-### Implementation
+### Key-based activation (deferred)
 
-```
-lib/features/vpnpro_activation/
-├── data/activation_repository.dart
-├── notifier/activation_notifier.dart
-└── widget/
-    ├── activation_screen.dart
-    └── deep_link_handler.dart
-```
+Original plan used activation keys (`VPN-XXXX-XXXX`) + a `user_token`
+stored for SSO/account API. Email lookup is simpler and works today
+without issuing/tracking keys. When we need per-user tokens (Phase 5
+Account button, Phase 4.1 targeted pushes), switch to either:
+- add a `user_token` column on brand `subscriptions` tables and return it
+  alongside `subscription_url`, or
+- fold activation into a new app-side auth service (Supabase Auth) with
+  proper session management.
 
-Add scheme `vpnpro` to:
+### Deep link (deferred)
+
+Email-after-purchase → `vpnpro://activate?email=...` — not wired yet;
+low priority because manual email entry works. When adding:
 - Android: [AndroidManifest.xml:77-83](android/app/src/main/AndroidManifest.xml) — add `<data android:scheme="vpnpro" />`
 - iOS: [Info.plist:32](ios/Runner/Info.plist) — add `vpnpro` to URL schemes array
 
 ### Existing schemes are kept
 
 `hiddify://`, `v2ray://`, `clash://`, etc. stay — lets power users still
-import subscriptions from other sources. We just add ours.
+import subscriptions via the "Пропустить" → stock flow.
+
+### File layout
+
+```
+lib/features/vpnpro_activation/
+├── data/activation_repository.dart    # Dio POST to Edge Function
+├── model/activation_failure.dart      # freezed sealed class, RU strings
+├── notifier/activation_notifier.dart  # AsyncNotifier, full chain
+└── widget/email_activation_page.dart  # UI
+```
+
+Supabase side lives in APPHub project only (brand projects are read-only
+from the hub's perspective).
 
 ---
 

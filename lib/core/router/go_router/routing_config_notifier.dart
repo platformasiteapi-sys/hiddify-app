@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hiddify/branding/branding.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/adaptive_layout/my_adaptive_layout.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
@@ -22,6 +23,7 @@ import 'package:hiddify/features/settings/overview/sections/route_options_page.d
 import 'package:hiddify/features/settings/overview/sections/tls_tricks_page.dart';
 import 'package:hiddify/features/settings/overview/sections/warp_options_page.dart';
 import 'package:hiddify/features/settings/overview/settings_page.dart';
+import 'package:hiddify/features/vpnpro_activation/widget/email_activation_page.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -65,6 +67,7 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
       redirect: (context, state) {
         final introCompleted = ref.read(Preferences.introCompleted);
         final isIntro = state.matchedLocation == '/intro';
+        final isEmailActivate = state.matchedLocation == '/email-activate';
         // fix path-parameters for deep link
         String? url;
         if (LinkParser.protocols.contains(state.uri.scheme)) {
@@ -77,8 +80,19 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
         }
 
         if (!introCompleted) {
+          // Phase 5: email-activation replaces the stock intro when enabled.
+          // If a deep-link `url` is present we bypass email activation and
+          // go straight to the stock intro — the user explicitly pasted a
+          // subscription URL, so there's nothing to look up.
+          if (Branding.enableEmailActivation && url == null) {
+            // Allow the user to bounce from email activation to stock
+            // intro via "Пропустить" — don't redirect /intro back to
+            // /email-activate in that case.
+            if (isIntro || isEmailActivate) return null;
+            return '/email-activate';
+          }
           return url != null ? '/intro?url=$url' : '/intro';
-        } else if (isIntro) {
+        } else if (isIntro || isEmailActivate) {
           if (url != null)
             WidgetsBinding.instance.addPostFrameCallback(
               (_) => ref.read(bottomSheetsNotifierProvider.notifier).showAddProfile(url: url),
@@ -247,6 +261,7 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
           ],
         ),
         GoRoute(name: 'intro', path: '/intro', builder: (_, _) => const IntroPage()),
+        GoRoute(name: 'emailActivate', path: '/email-activate', builder: (_, _) => const EmailActivationPage()),
       ],
     );
   }
