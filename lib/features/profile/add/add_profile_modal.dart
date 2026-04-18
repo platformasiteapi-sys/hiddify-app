@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hiddify/branding/branding.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/features/profile/add/widgets/free_btns.dart';
 import 'package:hiddify/features/profile/add/widgets/widgets.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
+import 'package:hiddify/features/vpnpro_activation/notifier/activation_notifier.dart';
+import 'package:hiddify/features/vpnpro_activation/widget/email_activate_row.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -29,6 +32,20 @@ class AddProfileModal extends HookConsumerWidget {
         });
       }
     });
+    // Email-activation (Phase 8, secondary entry) — close the sheet once
+    // the user successfully activates by email. Activation notifier sets
+    // introCompleted=true as a side effect; here we're already past intro
+    // so that's a no-op, but the new active profile triggers a home-screen
+    // refresh as soon as the sheet closes.
+    if (Branding.enableEmailActivation) {
+      ref.listen(activationNotifierProvider, (previous, next) {
+        if (next case AsyncData(value: final _?)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted && context.canPop()) context.pop();
+          });
+        }
+      });
+    }
 
     useMemoized(() async {
       await Future.delayed(const Duration(milliseconds: 200));
@@ -55,12 +72,17 @@ class AddProfileOptions extends HookConsumerWidget {
     // final isLoadingProfile = ref.watch(addProfileNotifierProvider).isLoading;
     final freeSwitch = ref.watch(freeSwitchNotifierProvider);
     final isDesktop = PlatformUtils.isDesktop;
+    // Phase 8 — email-activation row reserves vertical space at the top of
+    // the sheet. Flipping [Branding.enableEmailActivation] back to false
+    // restores the original (upstream) layout with zero code changes here.
+    const showEmailActivate = Branding.enableEmailActivation;
     return LayoutBuilder(
       builder: (context, constraints) {
         final fixBtnsHeight =
             (constraints.maxWidth - AddProfileModalConst.fixBtnsGap * AddProfileModalConst.fixBtnsGapCount) /
             AddProfileModalConst.fixBtnsItemCount;
-        final fullHeight = fixBtnsHeight + AddProfileModalConst.navBarHeight + 32;
+        const emailRowHeight = showEmailActivate ? EmailActivateRow.estimatedHeight : 0.0;
+        final fullHeight = fixBtnsHeight + AddProfileModalConst.navBarHeight + 32 + emailRowHeight;
         final initial = !freeSwitch ? fullHeight : fullHeight + 180;
         var min = !freeSwitch ? fullHeight : fullHeight + 100;
         var max = !freeSwitch ? fullHeight / constraints.maxHeight : 0.85;
@@ -75,6 +97,7 @@ class AddProfileOptions extends HookConsumerWidget {
           expand: false,
           builder: (context, scrollController) => Column(
             children: [
+              if (showEmailActivate) const EmailActivateRow(),
               const Gap(AddProfileModalConst.fixBtnsGap),
               FixBtns(height: fixBtnsHeight),
               if (freeSwitch) Expanded(child: FreeBtns(scrollController: scrollController)) else const Spacer(),
