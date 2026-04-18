@@ -22,6 +22,7 @@ import 'package:hiddify/features/log/data/log_data_providers.dart';
 import 'package:hiddify/features/profile/data/profile_data_providers.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/system_tray/notifier/system_tray_notifier.dart';
+import 'package:hiddify/features/vpnpro_info_blocks/notifier/info_blocks_providers.dart';
 import 'package:hiddify/features/vpnpro_push/push_service.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
@@ -111,6 +112,15 @@ Future<void> lazyBootstrap(WidgetsBinding widgetsBinding, Environment env) async
     // unsupported platform — see lib/features/vpnpro_push/push_service.dart.
     await _safeInit("vpnpro push", () => container.read(pushServiceProvider.future));
   }
+
+  // VPN Pro: warm up the info-blocks source so cached rows are ready by
+  // the time the home screen renders. Short timeout + safe — on failure
+  // the source falls back to Branding.infoBlocksHardcoded internally.
+  await _safeInit(
+    "vpnpro info blocks",
+    () => container.read(infoBlocksSourceProvider.future),
+    timeout: 2000,
+  );
 
   Logger.bootstrap.info("bootstrap took [${stopWatch.elapsedMilliseconds}ms]");
   stopWatch.stop();

@@ -52,6 +52,27 @@ abstract class Branding {
   /// `1` = single banner. Increase for stacked cards.
   static const int maxInfoBlocksShown = 1;
 
+  /// PostgREST endpoint in the APPHub Supabase project. Returns rows from
+  /// `public.info_blocks` filtered server-side by RLS (active + non-expired).
+  ///
+  /// Manage content via Supabase Table Editor:
+  ///   https://supabase.com/dashboard/project/mtiagdyyujgydifquafg/editor
+  ///
+  /// Set to `null` to disable remote fetching and fall back to
+  /// [infoBlocksHardcoded] permanently (kill switch / offline build).
+  static const String? infoBlocksEndpoint =
+      "https://mtiagdyyujgydifquafg.supabase.co/rest/v1/info_blocks";
+
+  /// Auth for the PostgREST call. Same anon JWT used by the activation
+  /// Edge Function — safe to embed in the client.
+  static const String infoBlocksApiKey = activationApiKey;
+
+  /// How long a successful fetch stays valid before the client re-fetches.
+  /// Short TTL = changes visible faster, more network chatter.
+  /// 1h is the sweet spot: active users see updates on next app resume
+  /// (we also refetch on foreground), idle users within an hour.
+  static const Duration infoBlocksCacheTtl = Duration(hours: 1);
+
   /// Active info blocks. Add/remove entries here to change what users see.
   ///
   /// Tips:

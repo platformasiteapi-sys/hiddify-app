@@ -27,7 +27,17 @@ Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 - ✅ `lib/features/vpnpro_info_blocks/` — feature module (data, providers, widgets)
 - ✅ One-line hook on home screen (above active-proxy footer)
 - ✅ Hardcoded list in `Branding.infoBlocksHardcoded` with expiry / priority / dismiss
-- ⏳ Server-driven source (Phase 3.1) — deferred until backend endpoint exists
+
+**Phase 3.1 — Server-driven info blocks** ✅
+- ✅ APPHub Supabase table `public.info_blocks` with RLS (anon SELECT limited to `active=true` and not-expired rows).
+- ✅ `InfoBlocksRepository` — Dio GET to PostgREST (no Edge Function needed), snake_case → `InfoBlock` mapping, malformed-row skip.
+- ✅ `InfoBlocksCache` — SharedPreferences JSON blob + `fetched_at` timestamp, self-heal on corruption.
+- ✅ `InfoBlocksSource` (@Riverpod(keepAlive: true) AsyncNotifier) — triple fallback: fresh cache → stale cache + background refresh → blocking fetch → `Branding.infoBlocksHardcoded`.
+- ✅ `visibleInfoBlocksProvider` kept as sync `Provider<List<InfoBlock>>` — widget API unchanged.
+- ✅ `Branding.infoBlocksEndpoint` (null = kill switch) / `infoBlocksApiKey` / `infoBlocksCacheTtl = 1h` flags.
+- ✅ Warm-up in `bootstrap.dart` (`_safeInit` with 2s timeout) + refresh on app resume in `App.onResume`.
+- ✅ End-to-end tested on Android debug APK: server edit → sheet-resume → live update in ~seconds.
+- 📝 Admin workflow: Supabase Dashboard Table Editor at https://supabase.com/dashboard/project/mtiagdyyujgydifquafg/editor → insert/update rows in `info_blocks`.
 
 **Phase 4 — Push notifications (Android, broadcast-only)** ✅
 - ✅ `firebase_core` + `firebase_messaging` pinned in `pubspec.yaml`
@@ -71,7 +81,6 @@ Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 | + push notifications | 🟢 ~85% | 🟡 ~45% |
 | + account button / WebView | 🟢 ~88% | 🟡 ~50% |
 | + custom home screen | 🟢 ~95% | 🟡 ~65% |
-| + simplified UX (advanced hidden) | 🟢 ~95% | 🟢 ~80% |
 | + custom onboarding | 🟢 ~95% | 🟢 ~90% |
 
 **Key risks** Apple enforces against VPN reskins (2024-2026):
@@ -356,40 +365,15 @@ API endpoints needed:
 
 ---
 
-## Phase 6 — Simplification (hide advanced features)
+## Phase 6 — ~~Simplification~~ (removed from scope)
 
-**Why:** Hiddify exposes protocol selection, route rules, per-app proxy,
-DNS config, CLI tuning — overwhelming for non-technical users and a
-reviewer tells on sight this is a power-user tool.
+Deliberately **not** doing this. Exposing protocol selection, route
+rules, per-app proxy, DNS config etc. is fine for our audience. Keep
+Hiddify's settings surface as-is.
 
-Paid mass-market VPN users expect a "one button" experience.
-
-### Targets for hiding
-
-Controlled by `Branding.enableAdvancedMode` flag (default `false`):
-
-- `/route-rules` screen — hide route from go_router
-- `/per-app-proxy` — same
-- Advanced settings in `/settings` (hide sections, not individual lines)
-- Profile list — show only active one, hide "add/edit/delete" UI
-- Log viewer — hide from UI (keep for `flutter run --debug`)
-- Quick settings panel (top-right gear on home) — remove or gut
-
-### Implementation pattern
-
-```dart
-// In go_router config (one file):
-if (Branding.enableAdvancedMode) ...[
-  GoRoute(path: '/route-rules', ...),
-  GoRoute(path: '/per-app-proxy', ...),
-],
-
-// In settings_page.dart:
-if (Branding.enableAdvancedMode) AdvancedSection(),
-```
-
-Files are **not deleted** — they stay for possible toggling back and to
-avoid upstream-merge conflicts.
+If this decision is ever revisited, the pattern was: flag
+`Branding.enableAdvancedMode` gating go_router entries and `Settings`
+sections — files stay on disk so upstream merges don't churn.
 
 ---
 

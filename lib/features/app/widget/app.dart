@@ -21,6 +21,7 @@ import 'package:hiddify/features/per_app_proxy/overview/per_app_proxy_service_no
 import 'package:hiddify/features/profile/notifier/profiles_update_notifier.dart';
 import 'package:hiddify/features/shortcut/shortcut_wrapper.dart';
 import 'package:hiddify/features/system_tray/notifier/system_tray_notifier.dart';
+import 'package:hiddify/features/vpnpro_info_blocks/notifier/info_blocks_providers.dart';
 import 'package:hiddify/features/window/widget/window_wrapper.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
 import 'package:hiddify/utils/utils.dart';
@@ -52,6 +53,11 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
       if (isOnPauseCalled && PlatformUtils.isAndroid) ref.invalidate(perAppProxyServiceProvider);
       isOnPauseCalled = false;
     });
+
+    // VPN Pro: refresh server-driven content on every foreground. Cheap
+    // (one ~1 KB GET) and gives admins a predictable "push change → see
+    // it quickly" workflow that doesn't depend on TTL math.
+    ref.read(infoBlocksSourceProvider.notifier).refresh();
   }
 
   @override
