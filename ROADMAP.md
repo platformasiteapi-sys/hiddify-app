@@ -22,12 +22,23 @@ Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 - ✅ `common.appTitle` → "VPN Pro" in all 11 locales
 - ✅ [BRANDING.md](BRANDING.md) with upstream-sync procedure
 
-**Phase 3 — Info blocks** ✅ (Phase 2 and Phases 4+ still ahead)
+**Phase 3 — Info blocks** ✅ (Phase 2 and Phases 5+ still ahead)
 - ✅ `lib/branding/info_block.dart` — model
 - ✅ `lib/features/vpnpro_info_blocks/` — feature module (data, providers, widgets)
 - ✅ One-line hook on home screen (above active-proxy footer)
 - ✅ Hardcoded list in `Branding.infoBlocksHardcoded` with expiry / priority / dismiss
 - ⏳ Server-driven source (Phase 3.1) — deferred until backend endpoint exists
+
+**Phase 4 — Push notifications (Android, broadcast-only)** ✅
+- ✅ `firebase_core` + `firebase_messaging` pinned in `pubspec.yaml`
+- ✅ Firebase project created, `google-services.json` in `android/app/` (gitignored)
+- ✅ Conditional `google-services` plugin in [android/app/build.gradle](android/app/build.gradle) — app still builds without the JSON
+- ✅ `lib/features/vpnpro_push/` — `PushService` singleton, Riverpod wrapper, prefs for token/topics/permission
+- ✅ `Branding.enablePushNotifications` / `defaultPushTopics` / `deviceTokenEndpoint` flags
+- ✅ One-line `_safeInit("vpnpro push", …)` hook in [lib/bootstrap.dart](lib/bootstrap.dart)
+- ✅ End-to-end tested: broadcast from Firebase Console → Topic `all-users` → delivered to device
+- ⏳ iOS push — deferred (requires Apple Developer Program $99/yr). Code already handles iOS; just needs `GoogleService-Info.plist` + entitlements
+- ⏳ Per-user targeted pushes (Phase 4.1) — deferred until backend endpoint exists (`Branding.deviceTokenEndpoint` null-switch ready)
 
 **Still Hiddify-themed** (intentionally, pending final art and decisions):
 - `assets/images/logo.svg` — used in header, About screen, intro, connection button

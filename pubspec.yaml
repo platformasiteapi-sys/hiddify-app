@@ -35,6 +35,12 @@ dependencies:
   drift_flutter: ^0.2.1
   shared_preferences: ^2.5.2
   # shared_preferences_android: ^2.4.8
+  # VPN Pro: push notifications via Firebase Cloud Messaging.
+  # Code: lib/features/vpnpro_push/. Requires google-services.json
+  # in android/app/ and/or GoogleService-Info.plist in ios/Runner/
+  # (both gitignored — each dev/build provides their own).
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.6
   dio: ^5.4.1
   ffi: ^2.1.2
   path_provider: ^2.1.1

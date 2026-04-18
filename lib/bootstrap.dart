@@ -22,6 +22,7 @@ import 'package:hiddify/features/log/data/log_data_providers.dart';
 import 'package:hiddify/features/profile/data/profile_data_providers.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/system_tray/notifier/system_tray_notifier.dart';
+import 'package:hiddify/features/vpnpro_push/push_service.dart';
 import 'package:hiddify/features/window/notifier/window_notifier.dart';
 import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
 import 'package:hiddify/riverpod_observer.dart';
@@ -105,6 +106,10 @@ Future<void> lazyBootstrap(WidgetsBinding widgetsBinding, Environment env) async
         await FlutterDisplayMode.setHighRefreshRate();
       });
     }
+
+    // VPN Pro: push notifications. Silent failure on missing config or
+    // unsupported platform — see lib/features/vpnpro_push/push_service.dart.
+    await _safeInit("vpnpro push", () => container.read(pushServiceProvider.future));
   }
 
   Logger.bootstrap.info("bootstrap took [${stopWatch.elapsedMilliseconds}ms]");

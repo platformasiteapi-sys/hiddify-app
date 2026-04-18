@@ -73,4 +73,35 @@ abstract class Branding {
       expiresAt: DateTime.utc(2026, 12, 31),
     ),
   ];
+
+  // ---- Push notifications (FCM) ----
+  // Feature module: lib/features/vpnpro_push/ (Phase 4 of ROADMAP).
+  //
+  // Broadcast flow (no backend required):
+  //   1. App auto-subscribes each install to the topics below.
+  //   2. Go to Firebase Console → Cloud Messaging → New campaign.
+  //   3. Target: Topic → pick one of [defaultPushTopics] → Send.
+  //   4. All users see the notification within ~30s.
+  //
+  // Silent if google-services.json (Android) / GoogleService-Info.plist (iOS)
+  // is missing — initialisation fails inside `_safeInit` and the rest of the
+  // app continues normally.
+
+  /// Master switch. When `false`, FCM is never initialised.
+  static const bool enablePushNotifications = true;
+
+  /// Topics every install subscribes to on first run.
+  /// Use "all-users" for unconditional broadcasts. Add more topics if you
+  /// want segmentation (e.g. "promo", "critical", "beta-testers") and later
+  /// let users opt out of specific ones from settings.
+  static const List<String> defaultPushTopics = ["all-users"];
+
+  /// Future: endpoint that receives `{token, platform, appVersion}` on each
+  /// FCM token refresh. While `null` the app only stores tokens locally —
+  /// fine for broadcasts via Firebase Console.
+  ///
+  /// Set this URL when you have a backend and want targeted (per-user) pushes.
+  /// Client already stores the latest token in SharedPreferences, so flipping
+  /// this flag is enough — no client rework needed.
+  static const String? deviceTokenEndpoint = null;
 }
