@@ -17,7 +17,7 @@ Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 - ✅ `lib/branding/branding.dart` — single source of truth for brand values
 - ✅ Display name "VPN Pro" on all 5 platforms (Android, iOS, macOS, Windows, Linux)
 - ✅ Bundle/application ID changed to `com.vpnpro.app`
-- ✅ Launcher icons replaced (Android mipmaps + iOS AppIcon) — temporary placeholder
+- ✅ Launcher icons replaced (Android mipmaps + iOS AppIcon) — branded bolt-on-gradient
 - ✅ Adaptive-icon XML fixed to reference mipmap PNGs (Android 8+)
 - ✅ `common.appTitle` → "VPN Pro" in all 11 locales
 - ✅ [BRANDING.md](BRANDING.md) with upstream-sync procedure
@@ -61,14 +61,16 @@ Branch: `brand/vpnpro`. Pushed to `origin/brand/vpnpro` on GitHub.
 - ⏳ Deep-link scheme `vpnpro://activate?email=...` — not wired yet (low priority; email paste works fine).
 - ⏳ Phase 9 custom onboarding — deferred; for now email activation screen *is* the first-launch UI.
 
-**Still Hiddify-themed** (intentionally, pending final art and decisions):
-- `assets/images/logo.svg` — used in header, About screen, intro, connection button
-- `assets/images/world_map.png` — background on home screen
-- `assets/images/tray_icon*.png/.ico` — system tray
-- `assets/images/connect_norouz.PNG` / `disconnect_norouz.PNG` — Iranian Nowruz holiday overlay (shown 19-23 March only)
-- App theme colors (seed color)
-- `appCastUrl`, GitHub URLs, Privacy Policy, Terms — still in `Branding` as Hiddify URLs
-- Windows `.ico`, macOS AppIcon, Linux `hiddify.png`, Android notification icon
+**Phase 2 — Visual identity** 🟡 (partial)
+- ✅ `assets/images/logo.svg` — new VPN Pro mark (bars + bolt, #5E56F3); works in 5 in-app locations including `ColorFilter.srcIn` on the connection button
+- ✅ Android launcher icon + iOS AppIcon (bolt on violet gradient) — done in Phase 1, verified
+- ⏳ `assets/images/world_map.png` — background on home screen (still Hiddify art)
+- ⏳ `assets/images/tray_icon*.png/.ico` — Windows system tray (8 files, connected/disconnected × light/dark)
+- ⏳ `assets/images/connect_norouz.PNG` / `disconnect_norouz.PNG` — Iranian Nowruz holiday overlay (shown 19-23 March only — low priority for RU audience)
+- ⏳ App theme colors (seed colour) — keeping Hiddify palette by decision
+- ⏳ Android notification status-bar icon (`ic_stat_logo.*`) — monochrome silhouette, needed if push notifications should show the brand mark
+- ⏳ macOS AppIcon, Linux `hiddify.png`, Windows `app_icon.ico`, splash screen — only when desktop distribution is on the table
+- ⏳ `appCastUrl`, GitHub URLs, Privacy Policy, Terms in `Branding` — still pointing at hiddify.com, must change before public release
 
 ---
 
